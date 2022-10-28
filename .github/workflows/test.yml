@@ -1,0 +1,32 @@
+name: test
+
+on:
+  push:
+    tags-ignore:
+      - v*
+    branches:
+      - 'release'
+
+jobs:
+  test:
+    name: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@v3
+    - name: build
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DSMEM_ENABLE_TEST=ON
+        cmake --build . --config Release --parallel 8 --target test_smem
+    - name: run test
+      if: matrix.os != 'windows-latest'
+      run: |
+        ./build/tests/test_smem
+    - name: run test
+      if: matrix.os == 'windows-latest'
+      run: |
+        ./build/tests/Release/test_smem.exe
