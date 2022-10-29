@@ -9,6 +9,7 @@
 // Copyright (c) 2022 Shun Suzuki. All rights reserved.
 //
 
+#include <cstring>
 #include <exception>
 #include <iostream>
 
