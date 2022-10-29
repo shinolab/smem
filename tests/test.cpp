@@ -39,11 +39,13 @@ TEST(FunctionTest, RandomRW) {
     sets.emplace_back(std::move(data));
   }
 
-  auto server_th = std::thread([&sets, size, iter] {
+  bool initialized = false;
+  auto server_th = std::thread([&sets, &initialized, size, iter] {
     auto smem = smem::SMem();
     smem.create("test_smem", size + 1);
     auto* ptr = static_cast<uint8_t*>(smem.map());
     ptr[0] = 0;
+    initialized = true;
     std::vector<uint8_t> buf;
     buf.resize(size);
     size_t c = 0;
@@ -59,11 +61,11 @@ TEST(FunctionTest, RandomRW) {
     smem.close();
   });
 
-  auto client_th = std::thread([&sets, size, iter] {
+  auto client_th = std::thread([&sets, &initialized, size, iter] {
     auto smem = smem::SMem();
     smem.create("test_smem", size + 1);
     auto* ptr = static_cast<uint8_t*>(smem.map());
-    ptr[0] = 0;
+    while(!initialized) std::this_thread::sleep_for(std::chrono::milliseconds(100));
     for (size_t i = 0; i < iter; i++) {
       while (ptr[0] == 1) std::this_thread::sleep_for(std::chrono::milliseconds(10));
       std::memcpy(ptr + 1, sets[i].data(), size);
