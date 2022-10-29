@@ -3,7 +3,7 @@
 // Created Date: 26/10/2022
 // Author: Shun Suzuki
 // -----
-// Last Modified: 28/10/2022
+// Last Modified: 29/10/2022
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2022 Shun Suzuki. All rights reserved.
@@ -18,10 +18,10 @@
 #pragma warning(pop)
 #endif
 
-#include <random>
-#include <thread>
 #include <cstring>
+#include <random>
 #include <smem/smem.hpp>
+#include <thread>
 
 TEST(FunctionTest, RandomRW) {
   constexpr size_t size = 65536;
@@ -43,7 +43,7 @@ TEST(FunctionTest, RandomRW) {
   auto server_th = std::thread([&sets, &initialized, size, iter] {
     auto smem = smem::SMem();
     smem.create("test_smem", size + 1);
-    auto* ptr = static_cast<uint8_t*>(smem.map());
+    volatile auto* ptr = static_cast<uint8_t*>(smem.map());
     ptr[0] = 0;
     initialized = true;
     std::vector<uint8_t> buf;
@@ -52,7 +52,7 @@ TEST(FunctionTest, RandomRW) {
     while (true) {
       if (ptr[0] == 0) std::this_thread::sleep_for(std::chrono::milliseconds(10));
       if (ptr[0] != 1) continue;
-      std::memcpy(buf.data(), ptr + 1, size);
+      std::memcpy(buf.data(), const_cast<uint8_t*>(ptr + 1), size);
       ptr[0] = 0;
       for (size_t i = 0; i < size; i++) ASSERT_EQ(sets[c][i], buf[i]);
       if (++c == iter) break;
@@ -65,7 +65,7 @@ TEST(FunctionTest, RandomRW) {
     auto smem = smem::SMem();
     smem.create("test_smem", size + 1);
     auto* ptr = static_cast<uint8_t*>(smem.map());
-    while(!initialized) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while (!initialized) std::this_thread::sleep_for(std::chrono::milliseconds(100));
     for (size_t i = 0; i < iter; i++) {
       while (ptr[0] == 1) std::this_thread::sleep_for(std::chrono::milliseconds(10));
       std::memcpy(ptr + 1, sets[i].data(), size);
