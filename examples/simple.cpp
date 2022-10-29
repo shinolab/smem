@@ -3,13 +3,12 @@
 // Created Date: 27/10/2022
 // Author: Shun Suzuki
 // -----
-// Last Modified: 27/10/2022
+// Last Modified: 29/10/2022
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2022 Shun Suzuki. All rights reserved.
 //
 
-#include <cstring>
 #include <exception>
 #include <iostream>
 #include <thread>
@@ -23,12 +22,12 @@ int main() try {
   auto server_th = std::thread([&created] {
     auto smem = smem::SMem();
     smem.create("test_smem", 65536);
-    auto* ptr = static_cast<char*>(smem.map());
-    std::memset(ptr, 0, 65536);
+    volatile auto* ptr = static_cast<char*>(smem.map());
+    ptr[0] = 0;
     created = true;
     while (true) {
       if (ptr[0] != 0x00) {
-        std::cout << "Receive: " << ptr << std::endl;
+        std::cout << "Receive: " << const_cast<char*>(ptr) << std::endl;
         break;
       }
     }
@@ -49,6 +48,8 @@ int main() try {
 
   if (server_th.joinable()) server_th.join();
   if (client_th.joinable()) client_th.join();
+
+  return 0;
 
 } catch (std::exception& ex) {
   std::cerr << ex.what() << std::endl;
