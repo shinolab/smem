@@ -3,7 +3,7 @@
 // Created Date: 27/10/2022
 // Author: Shun Suzuki
 // -----
-// Last Modified: 28/10/2022
+// Last Modified: 01/11/2022
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2022 Shun Suzuki. All rights reserved.
@@ -79,12 +79,14 @@ SMEM_HEADER_ONLY_INLINE void smem::SMem::create(const std::string& name, const s
   if (key == -1) throw std::runtime_error(std::to_string(errno) + ": Failed to get key");
 
   _seg_id = shmget(key, size, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR);
-  if (_seg_id == -1)
-    if (errno == 17) {
-      _seg_id = shmget(key, 0, 0);
-      if (_seg_id == -1) throw std::runtime_error(std::to_string(errno) + ": Failed to get shared memory");
-    } else
-      throw std::runtime_error(std::to_string(errno) + ": Failed to create shared memory");
+  if (_seg_id != -1) return;
+
+  if (errno == 17) {
+    _seg_id = shmget(key, 0, 0);
+    if (_seg_id == -1) throw std::runtime_error(std::to_string(errno) + ": Failed to get shared memory");
+  } else {
+    throw std::runtime_error(std::to_string(errno) + ": Failed to create shared memory");
+  }
 }
 
 SMEM_HEADER_ONLY_INLINE void* smem::SMem::map() {
