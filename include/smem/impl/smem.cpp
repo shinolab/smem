@@ -3,7 +3,7 @@
 // Created Date: 27/10/2022
 // Author: Shun Suzuki
 // -----
-// Last Modified: 01/11/2022
+// Last Modified: 21/11/2022
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2022 Shun Suzuki. All rights reserved.
@@ -54,10 +54,7 @@ SMEM_HEADER_ONLY_INLINE void smem::SMem::close() {
   _size = 0;
 }
 
-SMEM_HEADER_ONLY_INLINE smem::SMem::~SMem() {
-  unmap();
-  close();
-}
+SMEM_HEADER_ONLY_INLINE smem::SMem::~SMem() {}
 
 #else
 
@@ -107,9 +104,6 @@ SMEM_HEADER_ONLY_INLINE void smem::SMem::close() {
   ::remove(_key_path.c_str());
 }
 
-SMEM_HEADER_ONLY_INLINE smem::SMem::~SMem() {
-  unmap();
-  close();
-}
+SMEM_HEADER_ONLY_INLINE smem::SMem::~SMem() {}
 
 #endif
